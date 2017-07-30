@@ -1,7 +1,11 @@
 
-all: dockerfile
+all: nginx nginx-minder
 
-dockerfile:
+nginx: ./nginx/nginx.conf ./nginx/Dockerfile
+	docker build ./nginx/ --tag custom-nginx
+
+nginx-minder:
 	docker build . --tag nginx-minder
-.phony: all dockerfile
+
+.PHONY: all nginx nginx-minder
 
