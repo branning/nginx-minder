@@ -16,6 +16,7 @@ Options:
 
 import asyncio
 from datetime import datetime
+from sys import stdout
 from time import sleep
 
 from docopt import docopt
@@ -35,6 +36,7 @@ def log(report):
     print("20x:{}|s".format(report['200']))
     for route, count in report['routes']:
         print("{}:{}|s".format(route, count))
+    stdout.flush()
 
 def parse_nginx_log(line):
     code = 200
@@ -56,12 +58,13 @@ def report(period):
     report = BLANK_REPORT
     log(report)
     now = datetime.now()
+    then = now
     while True:
         # every time period, make a report and reset our counts
-        then = now
         now = datetime.now()
         elapsed = now - then
         if elapsed.seconds > period:
+            then = now
             log(report)
             report = BLANK_REPORT
         code, route = parse_nginx_log(follow(ACCESS_LOG))
