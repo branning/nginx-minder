@@ -17,5 +17,15 @@ seconds, the total count of `200`, `300`, `400`, `500` status codes is printed
 in `statsd`-compatible log messages, followed by a list of routes that produced
 `500` status codes with the code count.
 
-  
+## Deployment
+
+The containers are built and stored in [Docker Hub](http://hub.docker.com/branning/nginx-minder).
+In order to build the containers, you can run `make`. In order to push new 
+containers that will be pulled by the [Kubernetes deployment](k8s/nginx-minder-deployment.yaml), 
+you must first login to the Docker Hub repository:
+
+    docker login --username=branning
+
+After logging in, you can push new containers with `make push`.
+ 
 

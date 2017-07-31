@@ -2,10 +2,10 @@
 all: nginx nginx-minder
 
 nginx: ./nginx/nginx.conf ./nginx/Dockerfile
-	docker build ./nginx/ --tag nginx-to-mind
+	docker build ./nginx/ --tag branning/nginx-to-mind
 
 nginx-minder:
-	docker build . --tag nginx-minder
+	docker build . --tag branning/nginx-minder
 
 push:
 	docker push branning/nginx-minder
