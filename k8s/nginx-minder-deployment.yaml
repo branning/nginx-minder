@@ -1,0 +1,28 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-minder-deployment
+spec:
+  replicas: 2 # tells deployment to run 2 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      # a unique name for the pod is generated from the deployment name
+      labels:
+        app: nginx-minder
+    spec:
+      containers:
+      - name: nginx
+        image: branning/nginx-to-mind
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+      - name: nginx-minder
+        image: branning/nginx-minder
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+      volumes:
+      - name: varlog
+        emptyDir: {}
