@@ -1,10 +1,8 @@
 FROM python:3.6-slim
 
-RUN pip install pytest docopt
+RUN pip install docopt
 
-COPY ./src/nginx-minder.py /usr/bin/
+COPY ./src/nginx_minder.py /usr/local/bin/
 
-#WORKDIR ./src
-
-CMD ["nginx-minder.py"]
+CMD ["nginx_minder.py"]
 
