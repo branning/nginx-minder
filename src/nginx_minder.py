@@ -14,20 +14,30 @@ Options:
     --version        Show version
 '''
 
-import asyncio
 from datetime import datetime
+import re
 from sys import stdout
 from time import sleep
 
 from docopt import docopt
 
 ACCESS_LOG = '/var/log/nginx/access.log'
-# TODO: use Counter
 BLANK_REPORT = {'200': 0,
                 '300': 0,
                 '400': 0,
                 '500': 0,
                 'routes': {}}
+# read loglines produced by this nginx log_format directive
+#log_format main '$remote_addr - $http_x_forwarded_for - $http_x_realip - '
+#                '[$time_local] $scheme $http_x_forwarded_proto '
+#                '"$request" $status '
+#                '$body_bytes_sent "$http_referer" "$http_user_agent"';
+LOG_REGEX = ('(\S+) - (\S+) - (\S+) - '
+             '\[([^\]]+)\] (\S+) (\S+) '
+             '"([^"]+)" (\S+) '
+             '(\S+) "([^"]+)" "([^"]+)"')
+# we compile this once, the log lines aren't expected to change format
+log_scanner = re.compile(LOG_REGEX)
 
 def log(report):
     print("50x:{}|s".format(report['500']))
@@ -39,8 +49,12 @@ def log(report):
     stdout.flush()
 
 def parse_nginx_log(line):
-    code = 200
-    route = None
+    match = log_scanner.match(line)
+    if not match:
+        raise ValueError("failed to parse log line: {}".format(line))
+    request = match.group(7)
+    verb, route, protocol = request.split(' ')
+    code = int(match.group(8))
     return code, route
 
 def follow(filename):
@@ -49,13 +63,11 @@ def follow(filename):
         f.seek(0, 2)  # go to the end
         while True:
             line = f.readline()
-            if not line:
-                sleep(0.1) # don't spin-wait
-                continue
             yield line
 
 def report(period):
-    report = BLANK_REPORT
+    log_lines = follow(ACCESS_LOG)
+    report = BLANK_REPORT.copy()
     log(report)
     now = datetime.now()
     then = now
@@ -66,9 +78,17 @@ def report(period):
         if elapsed.seconds > period:
             then = now
             log(report)
-            report = BLANK_REPORT
-        code, route = parse_nginx_log(follow(ACCESS_LOG))
-        bucket = str(int(code / 100 * 100))
+            report = BLANK_REPORT.copy()
+        line = next(log_lines)
+        if not line:
+            sleep(0.1) # don't spin-wait
+            continue
+        try:
+            code, route = parse_nginx_log(line)
+        except ValueError as e:
+            print(e)
+            continue
+        bucket = str(int(code / 100) * 100)
         report[bucket] += 1
         # if there was an error, make a note of the route, too
         if bucket == '500':
