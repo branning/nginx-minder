@@ -16,13 +16,17 @@ spec:
         ports:
         - containerPort: 80
         volumeMounts:
-        - name: varlog
-          mountPath: /var/log
+        - name: varlognginx
+          mountPath: /var/log/nginx
       - name: nginx-minder
         image: branning/nginx-minder
         volumeMounts:
         - name: varlog
           mountPath: /var/log
+        - name: varlognginx
+          mountPath: /var/log/nginx
       volumes:
       - name: varlog
+        emptyDir: {}
+      - name: varlognginx
         emptyDir: {}
